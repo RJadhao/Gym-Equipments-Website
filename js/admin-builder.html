@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Page Builder - Jadhao Industries</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.css" rel="stylesheet">
+    
+    <style>
+        .builder-container {
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .builder-sidebar {
+            width: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 3px solid rgba(255,255,255,0.1);
+        }
+        
+        .builder-canvas {
+            flex: 1;
+            background: #f8f9fa;
+            overflow: auto;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .canvas-content {
+            min-height: calc(100vh - 100px);
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .element-block {
+            border: 2px dashed #dee2e6;
+            padding: 40px 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .element-block:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .element-block.drop-zone {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+        
+        .builder-element {
+            padding: 15px 20px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            cursor: move;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .builder-element:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .element-preview {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin: 15px 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .element-preview:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .element-controls {
+            position: absolute;
+            top: -15px;
+            right: 10px;
+            background: #667eea;
+            border-radius: 20px;
+            padding: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .element-preview:hover .element-controls {
+            opacity: 1;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            padding: 5px 8px;
+            margin: 0 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .canvas-toolbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        
+        .page-selector {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .element-being-dragged {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        
+        .editing-mode {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .new-element {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="builder-container d-flex">
+        <!-- ENHANCED: Builder Sidebar -->
+        <div class="builder-sidebar">
+            <div class="p-3">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0"><i class="fas fa-magic me-2"></i>Page Builder</h5>
+                    <a href="admin.html" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+                
+                <!-- Page Selector -->
+                <div class="page-selector">
+                    <label class="form-label">Select Page:</label>
+                    <select class="form-select" id="page-selector">
+                        <option value="index.html">Home Page</option>
+                        <option value="about.html">About Us</option>
+                        <option value="products.html">Products</option>
+                        <option value="contact.html">Contact</option>
+                        <option value="custom">Create New Page</option>
+                    </select>
+                </div>
+                
+                <!-- Elements Library -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-puzzle-piece me-2"></i>Content Elements</h6>
+                    <div class="builder-element" draggable="true" data-type="hero">
+                        <i class="fas fa-star me-2"></i>Hero Section
+                        <small class="d-block text-light">Large banner with title</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="text">
+                        <i class="fas fa-align-left me-2"></i>Text Block
+                        <small class="d-block text-light">Paragraph content</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="image">
+                        <i class="fas fa-image me-2"></i>Image
+                        <small class="d-block text-light">Single image with caption</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="gallery">
+                        <i class="fas fa-images me-2"></i>Image Gallery
+                        <small class="d-block text-light">Multiple images grid</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="button">
+                        <i class="fas fa-mouse-pointer me-2"></i>Button
+                        <small class="d-block text-light">Call-to-action button</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="form">
+                        <i class="fas fa-wpforms me-2"></i>Contact Form
+                        <small class="d-block text-light">Form with validation</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="products">
+                        <i class="fas fa-shopping-cart me-2"></i>Products Grid
+                        <small class="d-block text-light">Product showcase</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="testimonial">
+                        <i class="fas fa-quote-left me-2"></i>Testimonial
+                        <small class="d-block text-light">Customer review</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="video">
+                        <i class="fas fa-play me-2"></i>Video
+                        <small class="d-block text-light">Embedded video player</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="spacer">
+                        <i class="fas fa-arrows-alt-v me-2"></i>Spacer
+                        <small class="d-block text-light">Vertical spacing</small>
+                    </div>
+                </div>
+                
+                <!-- Layout Elements -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-th me-2"></i>Layout Elements</h6>
+                    <div class="builder-element" draggable="true" data-type="section">
+                        <i class="fas fa-layer-group me-2"></i>Section
+                        <small class="d-block text-light">Container section</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="columns">
+                        <i class="fas fa-columns me-2"></i>2 Columns
+                        <small class="d-block text-light">Split content layout</small>
+                    </div>
+                    <div class="builder-element" draggable="true" data-type="columns-3">
+                        <i class="fas fa-th-large me-2"></i>3 Columns
+                        <small class="d-block text-light">Triple column layout</small>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-tools me-2"></i>Actions</h6>
+                    <button class="btn btn-success btn-sm w-100 mb-2" onclick="builderSystem.saveChanges()">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                    <button class="btn btn-outline-light btn-sm w-100 mb-2" onclick="builderSystem.previewPage()">
+                        <i class="fas fa-eye me-2"></i>Preview Page
+                    </button>
+                    <button class="btn btn-outline-light btn-sm w-100 mb-2" onclick="builderSystem.exportHTML()">
+                        <i class="fas fa-download me-2"></i>Export HTML
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm w-100 mb-2" onclick="builderSystem.clearCanvas()">
+                        <i class="fas fa-eraser me-2"></i>Clear Canvas
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm w-100" onclick="builderSystem.resetPage()">
+                        <i class="fas fa-undo me-2"></i>Reset Page
+                    </button>
+                </div>
+                
+                <!-- Page Settings -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-cog me-2"></i>Page Settings</h6>
+                    <div class="mb-2">
+                        <label class="form-label small">Page Title:</label>
+                        <input type="text" class="form-control form-control-sm" id="page-title" placeholder="Enter page title">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">Meta Description:</label>
+                        <textarea class="form-control form-control-sm" id="page-description" rows="2" placeholder="Page description for SEO"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ENHANCED: Builder Canvas -->
+        <div class="builder-canvas">
+            <!-- Canvas Toolbar -->
+            <div class="canvas-toolbar">
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="builderSystem.undo()" title="Undo">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="builderSystem.redo()" title="Redo">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="builderSystem.toggleGrid()" title="Toggle Grid">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="btn btn-outline-success" onclick="builderSystem.saveChanges()" title="Save">
+                        <i class="fas fa-save"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Canvas Content -->
+            <div class="canvas-content" id="builder-canvas">
+                <div class="element-block" onclick="builderSystem.addElement('hero', this)">
+                    <div class="text-center">
+                        <i class="fas fa-plus fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Add Your First Element</h5>
+                        <p class="text-muted">Drag elements from the sidebar or click here to add a Hero Section</p>
+                    </div>
+                </div>
+                
+                <div class="element-block" onclick="builderSystem.showElementLibrary()">
+                    <div class="text-center">
+                        <i class="fas fa-magic fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Click to browse all available elements</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Element Properties Modal -->
+    <div class="modal fade" id="elementPropertiesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Edit Element
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="element-properties">
+                    <!-- Properties form will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="builderSystem.applyElementChanges()">
+                        <i class="fas fa-check me-2"></i>Apply Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script>
+        // COMPLETE REWRITTEN VISUAL BUILDER SYSTEM
+        class VisualBuilderSystem {
+            constructor() {
+                this.elements = [];
+                this.currentPage = 'index.html';
+                this.history = [];
+                this.historyIndex = -1;
+                this.currentEditingElement = null;
+                this.gridEnabled = false;
+                this.draggedElement = null;
+                
+                this.initializeBuilder();
+            }
+            
+            initializeBuilder() {
+                console.log('🎨 Visual Builder initialized');
+                this.setupDragAndDrop();
+                this.setupKeyboardShortcuts();
+                this.loadPageContent();
+                this.saveState();
+            }
+            
+            // FIXED: Complete drag and drop system
+            setupDragAndDrop() {
+                const canvas = document.getElementById('builder-canvas');
+                
+                // Make canvas sortable
+                new Sortable(canvas, {
+                    group: 'builder',
+                    animation: 150,
+                    ghostClass: 'element-being-dragged',
+                    chosenClass: 'editing-mode',
+                    onAdd: (evt) => {
+                        const elementType = evt.item.dataset.type;
+                        if (elementType) {
+                            this.handleDroppedElement(elementType, evt.newIndex);
+                            evt.item.remove(); // Remove the dragged sidebar element
+                        }
+                    },
+                    onUpdate: (evt) => {
+                        this.reorderElements(evt.oldIndex, evt.newIndex);
+                    }
+                });
+                
+                // Setup drag from sidebar
+                document.querySelectorAll('.builder-element').forEach(element => {
+                    element.addEventListener('dragstart', (e) => {
+                        this.draggedElement = e.target.dataset.type;
+                        e.target.classList.add('element-being-dragged');
+                    });
+                    
+                    element.addEventListener('dragend', (e) => {
+                        e.target.classList.remove('element-being-dragged');
+                        this.draggedElement = null;
+                    });
+                });
+                
+                // Setup drop zones
+                canvas.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    this.highlightDropZone(e);
+                });
+                
+                canvas.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    this.handleDrop(e);
+                    this.clearDropZones();
+                });
+                
+                canvas.addEventListener('dragleave', () => {
+                    this.clearDropZones();
+                });
+            }
+            
+            highlightDropZone(e) {
+                const elementBlocks = document.querySelectorAll('.element-block');
+                elementBlocks.forEach(block => {
+                    const rect = block.getBoundingClientRect();
+                    if (e.clientY >= rect.top && e.clientY <= rect.bottom &&
+                        e.clientX >= rect.left && e.clientX <= rect.right) {
+                        block.classList.add('drop-zone');
+                    } else {
+                        block.classList.remove('drop-zone');
+                    }
+                });
+            }
+            
+            clearDropZones() {
+                document.querySelectorAll('.drop-zone').forEach(zone => {
+                    zone.classList.remove('drop-zone');
+                });
+            }
+            
+            handleDrop(e) {
+                if (!this.draggedElement) return;
+                
+                const dropTarget = e.target.closest('.element-block');
+                if (dropTarget) {
+                    this.addElement(this.draggedElement, dropTarget);
+                }
+            }
+            
+            handleDroppedElement(elementType, index) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'element-block';
+                this.addElement(elementType, placeholder);
+            }
+            
+            reorderElements(oldIndex, newIndex) {
+                const element = this.elements.splice(oldIndex, 1)[0];
+                this.elements.splice(newIndex, 0, element);
+                this.saveState();
+            }
+            
+            // FIXED: Complete element addition system
+            addElement(type, targetBlock = null) {
+                let elementHtml = '';
+                let elementConfig = {};
+                
+                switch(type) {
+                    case 'hero':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'hero',
+                            title: 'Your Hero Title',
+                            subtitle: 'Your compelling subtitle goes here',
+                            buttonText: 'Get Started',
+                            buttonLink: '#',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            textColor: '#ffffff'
+                        };
+                        elementHtml = this.createHeroElement(elementConfig);
+                        break;
+                        
+                    case 'text':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'text',
+                            content: 'Click to edit this text block. You can add your content here.',
+                            fontSize: '16px',
+                            textAlign: 'left',
+                            textColor: '#333333'
+                        };
+                        elementHtml = this.createTextElement(elementConfig);
+                        break;
+                        
+                    case 'image':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'image',
+                            src: 'https://via.placeholder.com/800x400',
+                            alt: 'Image description',
+                            caption: 'Image caption',
+                            width: '100%',
+                            alignment: 'center'
+                        };
+                        elementHtml = this.createImageElement(elementConfig);
+                        break;
+                        
+                    case 'gallery':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'gallery',
+                            images: [
+                                'https://via.placeholder.com/400x300',
+                                'https://via.placeholder.com/400x300',
+                                'https://via.placeholder.com/400x300'
+                            ],
+                            columns: 3,
+                            spacing: '15px'
+                        };
+                        elementHtml = this.createGalleryElement(elementConfig);
+                        break;
+                        
+                    case 'button':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'button',
+                            text: 'Click Me',
+                            link: '#',
+                            style: 'primary',
+                            size: 'medium',
+                            alignment: 'left'
+                        };
+                        elementHtml = this.createButtonElement(elementConfig);
+                        break;
+                        
+                    case 'form':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'form',
+                            title: 'Contact Us',
+                            fields: ['name', 'email', 'message'],
+                            submitText: 'Send Message',
+                            method: 'POST',
+                            action: '#'
+                        };
+                        elementHtml = this.createFormElement(elementConfig);
+                        break;
+                        
+                    case 'products':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'products',
+                            title: 'Our Products',
+                            category: 'all',
+                            limit: 6,
+                            layout: 'grid'
+                        };
+                        elementHtml = this.createProductsElement(elementConfig);
+                        break;
+                        
+                    case 'video':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'video',
+                            src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                            title: 'Video Title',
+                            autoplay: false,
+                            controls: true
+                        };
+                        elementHtml = this.createVideoElement(elementConfig);
+                        break;
+                        
+                    case 'spacer':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'spacer',
+                            height: '50px',
+                            background: 'transparent'
+                        };
+                        elementHtml = this.createSpacerElement(elementConfig);
+                        break;
+                        
+                    case 'section':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'section',
+                            background: '#ffffff',
+                            padding: '60px 0',
+                            margin: '0',
+                            content: 'Section content goes here'
+                        };
+                        elementHtml = this.createSectionElement(elementConfig);
+                        break;
+                        
+                    case 'columns':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'columns',
+                            columns: 2,
+                            content: ['Column 1 content', 'Column 2 content'],
+                            columnGap: '30px'
+                        };
+                        elementHtml = this.createColumnsElement(elementConfig);
+                        break;
+                        
+                    case 'columns-3':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'columns',
+                            columns: 3,
+                            content: ['Column 1 content', 'Column 2 content', 'Column 3 content'],
+                            columnGap: '20px'
+                        };
+                        elementHtml = this.createColumnsElement(elementConfig);
+                        break;
+                        
+                    case 'testimonial':
+                        elementConfig = {
+                            id: this.generateElementId(),
+                            type: 'testimonial',
+                            quote: 'This is an amazing product! I highly recommend it.',
+                            author: 'John Doe',
+                            position: 'CEO, Company Inc.',
+                            avatar: 'https://via.placeholder.com/100x100',
+                            rating: 5
+                        };
+                        elementHtml = this.createTestimonialElement(elementConfig);
+                        break;
+                }
+                
+                if (elementHtml) {
+                    this.insertElement(elementHtml, targetBlock, elementConfig);
+                    this.saveState();
+                    this.showNotification(`${type} element added successfully!`, 'success');
+                }
+            }
+            
+            insertElement(elementHtml, targetBlock, config) {
+                if (targetBlock) {
+                    const newElement = document.createElement('div');
+                    newElement.innerHTML = elementHtml;
+                    const elementPreview = newElement.firstElementChild;
+                    
+                    // Replace target block or insert after it
+                    if (targetBlock.classList.contains('element-block')) {
+                        targetBlock.parentNode.replaceChild(elementPreview, targetBlock);
+                    } else {
+                        targetBlock.appendChild(elementPreview);
+                    }
+                    
+                    elementPreview.classList.add('new-element');
+                    this.elements.push(config);
+                    
+                    // Add event listeners
+                    this.bindElementEvents(elementPreview);
+                    
+                    // Add drop zone after this element
+                    this.addDropZoneAfter(elementPreview);
+                }
+            }
+            
+            addDropZoneAfter(element) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'element-block';
+                dropZone.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-plus fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Drop element here or click to add</p>
+                    </div>
+                `;
+                dropZone.onclick = () => this.showElementLibrary();
+                
+                element.parentNode.insertBefore(dropZone, element.nextSibling);
+            }
+            
+            bindElementEvents(element) {
+                element.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.selectElement(element);
+                });
+                
+                element.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    this.editElement(element);
+                });
+            }
+            
+            selectElement(element) {
+                // Remove previous selection
+                document.querySelectorAll('.editing-mode').forEach(el => {
+                    el.classList.remove('editing-mode');
+                });
+                
+                element.classList.add('editing-mode');
+                this.currentEditingElement = element;
+            }
+            
+            editElement(element) {
+                const elementId = element.dataset.id;
+                const config = this.elements.find(el => el.id === elementId);
+                
+                if (config) {
+                    this.showElementPropertiesModal(config);
+                }
+            }
+            
+            // Element creation methods
+            createHeroElement(config) {
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="hero">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="hero-section py-5 px-4" style="background: ${config.background}; color: ${config.textColor}; border-radius: 8px;">
+                            <div class="text-center">
+                                <h1 class="display-4 fw-bold mb-3">${config.title}</h1>
+                                <p class="lead mb-4">${config.subtitle}</p>
+                                <a href="${config.buttonLink}" class="btn btn-light btn-lg">${config.buttonText}</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createTextElement(config) {
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="text">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="text-block p-4">
+                            <p style="font-size: ${config.fontSize}; text-align: ${config.textAlign}; color: ${config.textColor};">
+                                ${config.content}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createImageElement(config) {
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="image">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="image-block p-4 text-${config.alignment}">
+                            <img src="${config.src}" alt="${config.alt}" class="img-fluid" style="width: ${config.width}; border-radius: 8px;">
+                            ${config.caption ? `<p class="mt-2 text-muted">${config.caption}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createGalleryElement(config) {
+                const imagesHtml = config.images.map(img => `
+                    <div class="col">
+                        <img src="${img}" class="img-fluid rounded" style="height: 200px; object-fit: cover; width: 100%;">
+                    </div>
+                `).join('');
+                
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="gallery">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="gallery-block p-4">
+                            <div class="row row-cols-${config.columns} g-${parseInt(config.spacing)/5}">
+                                ${imagesHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createButtonElement(config) {
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="button">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="button-block p-4 text-${config.alignment}">
+                            <a href="${config.link}" class="btn btn-${config.style} btn-${config.size === 'small' ? 'sm' : config.size === 'large' ? 'lg' : ''}">${config.text}</a>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createFormElement(config) {
+                const fieldsHtml = config.fields.map(field => {
+                    switch(field) {
+                        case 'name':
+                            return '<div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" name="name" required></div>';
+                        case 'email':
+                            return '<div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" name="email" required></div>';
+                        case 'phone':
+                            return '<div class="mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone"></div>';
+                        case 'message':
+                            return '<div class="mb-3"><label class="form-label">Message</label><textarea class="form-control" name="message" rows="4" required></textarea></div>';
+                        default:
+                            return '';
+                    }
+                }).join('');
+                
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="form">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="form-block p-4">
+                            <h4 class="mb-4">${config.title}</h4>
+                            <form method="${config.method}" action="${config.action}">
+                                ${fieldsHtml}
+                                <button type="submit" class="btn btn-primary">${config.submitText}</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createProductsElement(config) {
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="products">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="products-block p-4">
+                            <h3 class="text-center mb-4">${config.title}</h3>
+                            <div class="row row-cols-1 row-cols-md-3 g-4">
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <img src="https://via.placeholder.com/300x200" class="card-img-top">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Product 1</h5>
+                                            <p class="card-text">Sample product description</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="h5 text-primary">₹5,000</span>
+                                                <button class="btn btn-primary btn-sm">Add to Cart</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <img src="https://via.placeholder.com/300x200" class="card-img-top">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Product 2</h5>
+                                            <p class="card-text">Sample product description</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="h5 text-primary">₹7,500</span>
+                                                <button class="btn btn-primary btn-sm">Add to Cart</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <img src="https://via.placeholder.com/300x200" class="card-img-top">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Product 3</h5>
+                                            <p class="card-text">Sample product description</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="h5 text-primary">₹12,000</span>
+                                                <button class="btn btn-primary btn-sm">Add to Cart</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createVideoElement(config) {
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="video">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="video-block p-4">
+                            ${config.title ? `<h4 class="mb-3">${config.title}</h4>` : ''}
+                            <div class="ratio ratio-16x9">
+                                <iframe src="${config.src}" title="${config.title}" ${config.controls ? 'controls' : ''} ${config.autoplay ? 'autoplay' : ''}></iframe>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createSpacerElement(config) {
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="spacer">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="spacer-block" style="height: ${config.height}; background: ${config.background}; border: 2px dashed #dee2e6; display: flex; align-items: center; justify-content: center;">
+                            <small class="text-muted">Spacer (${config.height})</small>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createSectionElement(config) {
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="section">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="section-block" style="background: ${config.background}; padding: ${config.padding}; margin: ${config.margin}; border-radius: 8px;">
+                            <div class="container">
+                                <p>${config.content}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createColumnsElement(config) {
+                const columnsHtml = config.content.map((content, index) => `
+                    <div class="col">
+                        <div class="p-3 border rounded">
+                            <p>${content}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="columns">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="columns-block p-4">
+                            <div class="row row-cols-${config.columns}" style="gap: ${config.columnGap};">
+                                ${columnsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createTestimonialElement(config) {
+                const starsHtml = Array(5).fill().map((_, i) => 
+                    `<i class="fas fa-star${i < config.rating ? '' : ' text-muted'}"></i>`
+                ).join('');
+                
+                return `
+                    <div class="element-preview" data-id="${config.id}" data-type="testimonial">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="builderSystem.editElement(this.closest('.element-preview'))" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.duplicateElement(this.closest('.element-preview'))" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="control-btn" onclick="builderSystem.deleteElement(this.closest('.element-preview'))" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="testimonial-block p-4 text-center">
+                            <div class="mb-3">${starsHtml}</div>
+                            <blockquote class="blockquote">
+                                <p class="mb-3">"${config.quote}"</p>
+                            </blockquote>
+                            <div class="d-flex align-items-center justify-content-center">
+                                <img src="${config.avatar}" alt="${config.author}" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-0">${config.author}</h6>
+                                    <small class="text-muted">${config.position}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Element management methods
+            deleteElement(element) {
+                if (confirm('Are you sure you want to delete this element?')) {
+                    const elementId = element.dataset.id;
+                    this.elements = this.elements.filter(el => el.id !== elementId);
+                    element.remove();
+                    this.saveState();
+                    this.showNotification('Element deleted successfully', 'success');
+                }
+            }
+            
+            duplicateElement(element) {
+                const elementId = element.dataset.id;
+                const config = this.elements.find(el => el.id === elementId);
+                
+                if (config) {
+                    const newConfig = { ...config, id: this.generateElementId() };
+                    const elementHtml = this.createElement(newConfig);
+                    
+                    if (elementHtml) {
+                        const newElement = document.createElement('div');
+                        newElement.innerHTML = elementHtml;
+                        const elementPreview = newElement.firstElementChild;
+                        
+                        element.parentNode.insertBefore(elementPreview, element.nextSibling);
+                        this.elements.push(newConfig);
+                        this.bindElementEvents(elementPreview);
+                        this.addDropZoneAfter(elementPreview);
+                        this.saveState();
+                        this.showNotification('Element duplicated successfully', 'success');
+                    }
+                }
+            }
+            
+            createElement(config) {
+                switch(config.type) {
+                    case 'hero': return this.createHeroElement(config);
+                    case 'text': return this.createTextElement(config);
+                    case 'image': return this.createImageElement(config);
+                    case 'gallery': return this.createGalleryElement(config);
+                    case 'button': return this.createButtonElement(config);
+                    case 'form': return this.createFormElement(config);
+                    case 'products': return this.createProductsElement(config);
+                    case 'video': return this.createVideoElement(config);
+                    case 'spacer': return this.createSpacerElement(config);
+                    case 'section': return this.createSectionElement(config);
+                    case 'columns': return this.createColumnsElement(config);
+                    case 'testimonial': return this.createTestimonialElement(config);
+                    default: return '';
+                }
+            }
+            
+            // Properties modal
+            showElementPropertiesModal(config) {
+                const propertiesContainer = document.getElementById('element-properties');
+                let propertiesHtml = '';
+                
+                switch(config.type) {
+                    case 'hero':
+                        propertiesHtml = `
+                            <div class="mb-3">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-control" id="prop-title" value="${config.title}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Subtitle</label>
+                                <textarea class="form-control" id="prop-subtitle" rows="2">${config.subtitle}</textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Button Text</label>
+                                        <input type="text" class="form-control" id="prop-buttonText" value="${config.buttonText}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Button Link</label>
+                                        <input type="text" class="form-control" id="prop-buttonLink" value="${config.buttonLink}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Background</label>
+                                        <input type="text" class="form-control" id="prop-background" value="${config.background}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Text Color</label>
+                                        <input type="color" class="form-control" id="prop-textColor" value="${config.textColor}">
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                        
+                    case 'text':
+                        propertiesHtml = `
+                            <div class="mb-3">
+                                <label class="form-label">Content</label>
+                                <textarea class="form-control" id="prop-content" rows="4">${config.content}</textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Font Size</label>
+                                        <input type="text" class="form-control" id="prop-fontSize" value="${config.fontSize}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Text Align</label>
+                                        <select class="form-control" id="prop-textAlign">
+                                            <option value="left" ${config.textAlign === 'left' ? 'selected' : ''}>Left</option>
+                                            <option value="center" ${config.textAlign === 'center' ? 'selected' : ''}>Center</option>
+                                            <option value="right" ${config.textAlign === 'right' ? 'selected' : ''}>Right</option>
+                                            <option value="justify" ${config.textAlign === 'justify' ? 'selected' : ''}>Justify</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Text Color</label>
+                                        <input type="color" class="form-control" id="prop-textColor" value="${config.textColor}">
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                        
+                    case 'image':
+                        propertiesHtml = `
+                            <div class="mb-3">
+                                <label class="form-label">Image URL</label>
+                                <input type="url" class="form-control" id="prop-src" value="${config.src}">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Alt Text</label>
+                                        <input type="text" class="form-control" id="prop-alt" value="${config.alt}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Caption</label>
+                                        <input type="text" class="form-control" id="prop-caption" value="${config.caption}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Width</label>
+                                        <input type="text" class="form-control" id="prop-width" value="${config.width}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Alignment</label>
+                                        <select class="form-control" id="prop-alignment">
+                                            <option value="start" ${config.alignment === 'start' ? 'selected' : ''}>Left</option>
+                                            <option value="center" ${config.alignment === 'center' ? 'selected' : ''}>Center</option>
+                                            <option value="end" ${config.alignment === 'end' ? 'selected' : ''}>Right</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                        
+                    // Add more cases for other element types...
+                    default:
+                        propertiesHtml = '<p class="text-muted">Properties for this element type are not yet implemented.</p>';
+                }
+                
+                propertiesContainer.innerHTML = propertiesHtml;
+                this.currentEditingElement = config;
+                
+                const modal = new bootstrap.Modal(document.getElementById('elementPropertiesModal'));
+                modal.show();
+            }
+            
+            applyElementChanges() {
+                if (!this.currentEditingElement) return;
+                
+                const config = this.currentEditingElement;
+                
+                // Update config based on form inputs
+                switch(config.type) {
+                    case 'hero':
+                        config.title = document.getElementById('prop-title').value;
+                        config.subtitle = document.getElementById('prop-subtitle').value;
+                        config.buttonText = document.getElementById('prop-buttonText').value;
+                        config.buttonLink = document.getElementById('prop-buttonLink').value;
+                        config.background = document.getElementById('prop-background').value;
+                        config.textColor = document.getElementById('prop-textColor').value;
+                        break;
+                        
+                    case 'text':
+                        config.content = document.getElementById('prop-content').value;
+                        config.fontSize = document.getElementById('prop-fontSize').value;
+                        config.textAlign = document.getElementById('prop-textAlign').value;
+                        config.textColor = document.getElementById('prop-textColor').value;
+                        break;
+                        
+                    case 'image':
+                        config.src = document.getElementById('prop-src').value;
+                        config.alt = document.getElementById('prop-alt').value;
+                        config.caption = document.getElementById('prop-caption').value;
+                        config.width = document.getElementById('prop-width').value;
+                        config.alignment = document.getElementById('prop-alignment').value;
+                        break;
+                }
+                
+                // Update element in array
+                const elementIndex = this.elements.findIndex(el => el.id === config.id);
+                if (elementIndex !== -1) {
+                    this.elements[elementIndex] = config;
+                }
+                
+                // Regenerate element HTML
+                const elementPreview = document.querySelector(`[data-id="${config.id}"]`);
+                if (elementPreview) {
+                    const newHtml = this.createElement(config);
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = newHtml;
+                    const newElement = tempDiv.firstElementChild;
+                    
+                    elementPreview.parentNode.replaceChild(newElement, elementPreview);
+                    this.bindElementEvents(newElement);
+                }
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('elementPropertiesModal'));
+                modal.hide();
+                
+                this.saveState();
+                this.showNotification('Element updated successfully!', 'success');
+            }
+            
+            // Utility methods
+            generateElementId() {
+                return 'element-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+            }
+            
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        switch(e.key) {
+                            case 'z':
+                                e.preventDefault();
+                                if (e.shiftKey) {
+                                    this.redo();
+                                } else {
+                                    this.undo();
+                                }
+                                break;
+                            case 's':
+                                e.preventDefault();
+                                this.saveChanges();
+                                break;
+                            case 'p':
+                                e.preventDefault();
+                                this.previewPage();
+                                break;
+                        }
+                    }
+                    
+                    if (e.key === 'Delete' && this.currentEditingElement) {
+                        const elementPreview = document.querySelector(`[data-id="${this.currentEditingElement.id}"]`);
+                        if (elementPreview) {
+                            this.deleteElement(elementPreview);
+                        }
+                    }
+                });
+            }
+            
+            // State management
+            saveState() {
+                // Remove future history when new action is performed
+                this.history = this.history.slice(0, this.historyIndex + 1);
+                
+                // Add current state to history
+                this.history.push({
+                    elements: JSON.parse(JSON.stringify(this.elements)),
+                    timestamp: Date.now()
+                });
+                
+                // Limit history size
+                if (this.history.length > 50) {
+                    this.history.shift();
+                } else {
+                    this.historyIndex++;
+                }
+            }
+            
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.restoreState(this.history[this.historyIndex]);
+                    this.showNotification('Undo performed', 'info');
+                }
+            }
+            
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.restoreState(this.history[this.historyIndex]);
+                    this.showNotification('Redo performed', 'info');
+                }
+            }
+            
+            restoreState(state) {
+                this.elements = state.elements;
+                this.renderCanvas();
+            }
+            
+            renderCanvas() {
+                const canvas = document.getElementById('builder-canvas');
+                canvas.innerHTML = '';
+                
+                this.elements.forEach(config => {
+                    const elementHtml = this.createElement(config);
+                    if (elementHtml) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = elementHtml;
+                        const element = tempDiv.firstElementChild;
+                        canvas.appendChild(element);
+                        this.bindElementEvents(element);
+                        this.addDropZoneAfter(element);
+                    }
+                });
+                
+                // Add final drop zone
+                const finalDropZone = document.createElement('div');
+                finalDropZone.className = 'element-block';
+                finalDropZone.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-plus fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Add another element</p>
+                    </div>
+                `;
+                finalDropZone.onclick = () => this.showElementLibrary();
+                canvas.appendChild(finalDropZone);
+            }
+            
+            // Page management
+            switchPage() {
+                const pageSelector = document.getElementById('page-selector');
+                this.currentPage = pageSelector.value;
+                this.loadPageContent();
+            }
+            
+            loadPageContent() {
+                // Load saved page content or start with empty canvas
+                const savedContent = localStorage.getItem(`jadhao_page_${this.currentPage}`);
+                if (savedContent) {
+                    try {
+                        const pageData = JSON.parse(savedContent);
+                        this.elements = pageData.elements || [];
+                        this.renderCanvas();
+                        
+                        // Load page settings
+                        document.getElementById('page-title').value = pageData.title || '';
+                        document.getElementById('page-description').value = pageData.description || '';
+                    } catch (error) {
+                        console.error('Error loading page content:', error);
+                        this.elements = [];
+                    }
+                } else {
+                    this.elements = [];
+                }
+            }
+            
+            saveChanges() {
+                const pageData = {
+                    elements: this.elements,
+                    title: document.getElementById('page-title').value,
+                    description: document.getElementById('page-description').value,
+                    lastModified: new Date().toISOString()
+                };
+                
+                localStorage.setItem(`jadhao_page_${this.currentPage}`, JSON.stringify(pageData));
+                this.showNotification(`${this.currentPage} saved successfully!`, 'success');
+            }
+            
+            previewPage() {
+                // Generate HTML for preview
+                const html = this.generatePageHTML();
+                
+                // Open preview in new window
+                const previewWindow = window.open('', '_blank');
+                previewWindow.document.write(html);
+                previewWindow.document.close();
+            }
+            
+            generatePageHTML() {
+                const elementsHtml = this.elements.map(config => {
+                    return this.createElement(config).replace(/element-preview/g, '').replace(/element-controls[\s\S]*?<\/div>/g, '');
+                }).join('\n');
+                
+                return `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>${document.getElementById('page-title').value || 'Jadhao Industries'}</title>
+                        <meta name="description" content="${document.getElementById('page-description').value || ''}">
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                    </head>
+                    <body>
+                        ${elementsHtml}
+                        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                        <script src="js/script.js"></script>
+                    </body>
+                    </html>
+                `;
+            }
+            
+            exportHTML() {
+                const html = this.generatePageHTML();
+                const blob = new Blob([html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${this.currentPage}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showNotification('HTML exported successfully!', 'success');
+            }
+            
+            clearCanvas() {
+                if (confirm('Are you sure you want to clear the canvas? This action cannot be undone.')) {
+                    this.elements = [];
+                    const canvas = document.getElementById('builder-canvas');
+                    canvas.innerHTML = `
+                        <div class="element-block" onclick="builderSystem.addElement('hero', this)">
+                            <div class="text-center">
+                                <i class="fas fa-plus fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Add Your First Element</h5>
+                                <p class="text-muted">Drag elements from the sidebar or click here to add a Hero Section</p>
+                            </div>
+                        </div>
+                    `;
+                    this.saveState();
+                    this.showNotification('Canvas cleared successfully!', 'success');
+                }
+            }
+            
+            resetPage() {
+                if (confirm('Are you sure you want to reset this page? All changes will be lost.')) {
+                    localStorage.removeItem(`jadhao_page_${this.currentPage}`);
+                    this.loadPageContent();
+                    this.showNotification('Page reset successfully!', 'success');
+                }
+            }
+            
+            toggleGrid() {
+                this.gridEnabled = !this.gridEnabled;
+                const canvas = document.getElementById('builder-canvas');
+                
+                if (this.gridEnabled) {
+                    canvas.style.backgroundImage = 'linear-gradient(rgba(102, 126, 234, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(102, 126, 234, 0.1) 1px, transparent 1px)';
+                    canvas.style.backgroundSize = '20px 20px';
+                } else {
+                    canvas.style.backgroundImage = 'none';
+                }
+            }
+            
+            showElementLibrary() {
+                // Simple implementation - can be enhanced with a proper modal
+                alert('Element Library\n\nDrag elements from the left sidebar to add them to your page.\n\nAvailable elements:\n- Hero Section\n- Text Block\n- Image\n- Gallery\n- Button\n- Contact Form\n- Products Grid\n- Video\n- Spacer\n- Testimonial\n- Section Container\n- Columns');
+            }
+            
+            showNotification(message, type = 'info', duration = 3000) {
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+                notification.style.cssText = `
+                    top: 20px; 
+                    left: 50%; 
+                    transform: translateX(-50%);
+                    z-index: 9999; 
+                    min-width: 300px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                `;
+                
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle'
+                };
+                
+                notification.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas ${icons[type] || icons.info} me-2"></i>
+                        <div class="flex-grow-1">${message}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, duration);
+            }
+        }
+
+        // Initialize the visual builder
+        const builderSystem = new VisualBuilderSystem();
+        
+        // Global access
+        window.builderSystem = builderSystem;
+        
+        console.log('🎨 Complete Visual Builder System Loaded Successfully');
+    </script>
+</body>
+</html>
