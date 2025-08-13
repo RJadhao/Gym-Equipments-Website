@@ -1,0 +1,854 @@
+
+<!--
+Ownership Notice: This file is the intellectual property of Jadhao Industries.
+Contact: contact@jadhaoindustries.com
+Generated Timestamp (UTC): 2025-08-13T19:10:40.337283
+Unique File Signature: 9f3b3fa2a69a7c177654c88a3d6330d9ab71b5e6a46a91303100700ed87d0b71
+Unauthorized use is prohibited under Indian and International Laws.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Jadhao Industries</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --sidebar-bg: #34495e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+        }
+
+        .admin-container {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .admin-sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, var(--sidebar-bg) 0%, var(--primary-color) 100%);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-content {
+            flex: 1;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .admin-header {
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .menu-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: var(--secondary-color);
+            transform: translateX(5px);
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 12px;
+        }
+
+        .content-section {
+            display: none;
+            padding: 2rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--secondary-color);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .stats-icon {
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+        }
+
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-form {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            min-width: 400px;
+            text-align: center;
+        }
+
+        .btn-admin {
+            background: var(--secondary-color);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-admin:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .table th {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .badge-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .action-buttons .btn {
+            margin: 0 2px;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .modal-header {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-header .btn-close {
+            filter: invert(1);
+        }
+
+        .alert-custom {
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+        }
+
+        .page-builder-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .builder-toolbar {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .element-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+
+        .element-item:hover {
+            border-color: var(--secondary-color);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+        }
+
+        .element-controls {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .element-item:hover .element-controls {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                width: 250px;
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 1000;
+                height: 100vh;
+            }
+
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .admin-content {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-form">
+            <div class="mb-4">
+                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                <h3>Admin Login</h3>
+                <p class="text-muted">Enter your credentials to access the admin panel</p>
+            </div>
+            
+            <form id="admin-login-form">
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" class="form-control" id="admin-username" placeholder="Username" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="admin-password" placeholder="Password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-admin w-100 mb-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </button>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Default: admin / admin123<br>
+                        Super Admin: superadmin / super123
+                    </small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="admin-sidebar" id="admin-sidebar">
+            <div class="sidebar-header">
+                <h4><i class="fas fa-dumbbell me-2"></i>Jadhao Admin</h4>
+                <p class="mb-0">Welcome, <span id="admin-user-name">Admin</span></p>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </div>
+                <div class="menu-item" data-section="products">
+                    <i class="fas fa-box"></i>Products
+                </div>
+                <div class="menu-item" data-section="orders">
+                    <i class="fas fa-shopping-cart"></i>Orders
+                </div>
+                <div class="menu-item" data-section="contacts">
+                    <i class="fas fa-envelope"></i>Contact Inquiries
+                </div>
+                <div class="menu-item" data-section="users">
+                    <i class="fas fa-users"></i>User Management
+                </div>
+                <div class="menu-item" data-section="page-builder">
+                    <i class="fas fa-paint-brush"></i>Page Builder
+                </div>
+                <div class="menu-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>Analytics
+                </div>
+                <div class="menu-item" data-section="settings">
+                    <i class="fas fa-cog"></i>Settings
+                </div>
+                <div class="menu-item" onclick="window.open('index.html', '_blank')">
+                    <i class="fas fa-external-link-alt"></i>View Website
+                </div>
+                <div class="menu-item" onclick="adminPanel.logout()">
+                    <i class="fas fa-sign-out-alt"></i>Logout
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="admin-content">
+            <!-- Header -->
+            <div class="admin-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-outline-primary d-md-none me-3" onclick="toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h4 class="mb-0">Admin Panel</h4>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">Last login: <span id="last-login-time">Just now</span></span>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-2"></i><span id="header-user-name">Admin</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="adminPanel.showProfile()"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="adminPanel.logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="content-section active">
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-2">Total Products</h6>
+                                    <h3 class="text-primary mb-0" id="total-products">0</h3>
+                                </div>
+                                <div class="stats-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-2">Total Orders</h6>
+                                    <h3 class="text-success mb-0" id="total-orders">0</h3>
+                                </div>
+                                <div class="stats-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-2">Contact Inquiries</h6>
+                                    <h3 class="text-warning mb-0" id="total-contacts">0</h3>
+                                </div>
+                                <div class="stats-icon">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-2">Total Revenue</h6>
+                                    <h3 class="text-danger mb-0" id="total-revenue">₹0</h3>
+                                </div>
+                                <div class="stats-icon">
+                                    <i class="fas fa-rupee-sign"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8 mb-4">
+                        <div class="data-table">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Recent Activities</th>
+                                            <th>Type</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-activities">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                <i class="fas fa-clock fa-2x mb-2"></i><br>
+                                                No recent activities
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="stats-card">
+                            <h5 class="mb-3">Quick Actions</h5>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="adminPanel.showSection('products')">
+                                    <i class="fas fa-plus me-2"></i>Add Product
+                                </button>
+                                <button class="btn btn-success" onclick="adminPanel.showSection('orders')">
+                                    <i class="fas fa-eye me-2"></i>View Orders
+                                </button>
+                                <button class="btn btn-warning" onclick="adminPanel.showSection('contacts')">
+                                    <i class="fas fa-envelope me-2"></i>Check Inquiries
+                                </button>
+                                <button class="btn btn-info" onclick="adminPanel.showSection('page-builder')">
+                                    <i class="fas fa-paint-brush me-2"></i>Page Builder
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Section -->
+            <div id="products-section" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Product Management</h4>
+                    <button class="btn btn-primary" onclick="adminPanel.showAddProductModal()">
+                        <i class="fas fa-plus me-2"></i>Add Product
+                    </button>
+                </div>
+                
+                <div class="data-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table">
+                                <!-- Products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div id="orders-section" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Order Management</h4>
+                    <div>
+                        <select class="form-select d-inline-block w-auto me-2" id="order-filter">
+                            <option value="all">All Orders</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                        </select>
+                        <button class="btn btn-outline-primary" onclick="adminPanel.exportOrders()">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table">
+                                <!-- Orders will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Contact Inquiries Section -->
+            <div id="contacts-section" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Contact Inquiries Management</h4>
+                    <div>
+                        <select class="form-select d-inline-block w-auto me-2" id="contact-filter" onchange="adminPanel.filterContacts()">
+                            <option value="all">All Inquiries</option>
+                            <option value="unread">Unread</option>
+                            <option value="read">Read</option>
+                            <option value="replied">Replied</option>
+                        </select>
+                        <button class="btn btn-outline-danger me-2" onclick="adminPanel.deleteAllReadContacts()">
+                            <i class="fas fa-trash me-2"></i>Delete Read
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="adminPanel.exportContacts()">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="select-all-contacts" onchange="adminPanel.toggleSelectAllContacts()">
+                                    </th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Subject</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contacts-table">
+                                <!-- Contacts will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Bulk Actions -->
+                <div class="d-flex justify-content-between align-items-center mt-3" id="bulk-actions" style="display: none !important;">
+                    <span class="text-muted">Selected: <span id="selected-count">0</span> contacts</span>
+                    <div>
+                        <button class="btn btn-sm btn-success me-2" onclick="adminPanel.bulkMarkAsRead()">
+                            <i class="fas fa-check me-1"></i>Mark as Read
+                        </button>
+                        <button class="btn btn-sm btn-info me-2" onclick="adminPanel.bulkMarkAsReplied()">
+                            <i class="fas fa-reply me-1"></i>Mark as Replied
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="adminPanel.bulkDeleteContacts()">
+                            <i class="fas fa-trash me-1"></i>Delete Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>User Management</h4>
+                    <button class="btn btn-primary" onclick="adminPanel.showAddUserModal()">
+                        <i class="fas fa-user-plus me-2"></i>Add User
+                    </button>
+                </div>
+                
+                <div class="data-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Visual Page Builder Section -->
+            <div id="page-builder-section" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Visual Page Builder</h4>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="pageBuilder.saveChanges()">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                        <button class="btn btn-outline-primary me-2" onclick="pageBuilder.previewChanges()">
+                            <i class="fas fa-eye me-2"></i>Preview
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="pageBuilder.resetToDefault()">
+                            <i class="fas fa-undo me-2"></i>Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Elements Toolbar -->
+                    <div class="col-md-3">
+                        <div class="page-builder-section">
+                            <h5><i class="fas fa-puzzle-piece me-2"></i>Elements</h5>
+                            
+                            <div class="builder-toolbar">
+                                <h6>Content Elements</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="pageBuilder.addElement('hero')">
+                                        <i class="fas fa-star me-1"></i>Hero Section
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="pageBuilder.addElement('features')">
+                                        <i class="fas fa-th me-1"></i>Features Grid
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="pageBuilder.addElement('products')">
+                                        <i class="fas fa-box me-1"></i>Products Section
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="pageBuilder.addElement('testimonials')">
+                                        <i class="fas fa-comments me-1"></i>Testimonials
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="pageBuilder.addElement('contact')">
+                                        <i class="fas fa-envelope me-1"></i>Contact Form
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="pageBuilder.addElement('gallery')">
+                                        <i class="fas fa-images me-1"></i>Image Gallery
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="pageBuilder.addElement('text')">
+                                        <i class="fas fa-align-left me-1"></i>Text Block
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="builder-toolbar">
+                                <h6>Layout Elements</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="pageBuilder.addElement('spacer')">
+                                        <i class="fas fa-arrows-alt-v me-1"></i>Spacer
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="pageBuilder.addElement('divider')">
+                                        <i class="fas fa-minus me-1"></i>Divider
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="pageBuilder.addElement('columns')">
+                                        <i class="fas fa-columns me-1"></i>Columns
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="builder-toolbar">
+                                <h6>Media Elements</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-info btn-sm" onclick="pageBuilder.addElement('video')">
+                                        <i class="fas fa-video me-1"></i>Video
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm" onclick="pageBuilder.addElement('slider')">
+                                        <i class="fas fa-sliders-h me-1"></i>Image Slider
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page Builder Canvas -->
+                    <div class="col-md-6">
+                        <div class="page-builder-section">
+                            <h5><i class="fas fa-desktop me-2"></i>Page Preview</h5>
+                            <div id="page-builder-canvas" class="border rounded p-3" style="min-height: 600px; background: #f8f9fa;">
+                                <div class="text-center text-muted py-5">
+                                    <i class="fas fa-mouse-pointer fa-3x mb-3"></i>
+                                    <h5>Drag elements from the left panel to build your page</h5>
+                                    <p>Click on any element to edit its properties</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Properties Panel -->
+                    <div class="col-md-3">
+                        <div class="page-builder-section">
+                            <h5><i class="fas fa-cog me-2"></i>Properties</h5>
+                            <div id="properties-panel">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-hand-pointer fa-2x mb-3"></i>
+                                    <p>Select an element to edit its properties</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="page-builder-section mt-3">
+                            <h5><i class="fas fa-layer-group me-2"></i>Layers</h5>
+                            <div id="layers-panel">
+                                <div class="text-muted">
+                                    <small>No elements added yet</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="analytics-section" class="content-section">
+                <h4 class="mb-4">Analytics & Reports</h4>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <h5>Sales Overview</h5>
+                            <canvas id="salesChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <h5>Popular Products</h5>
+                            <div id="popular-products">
+                                <!-- Popular products list -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settings-section" class="content-section">
+                <h4 class="mb-4">Settings</h4>
+                
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="stats-card">
+                            <h5>Website Settings</h5>
+                            <form id="website-settings-form">
+                                <div class="mb-3">
+                                    <label class="form-label">Website Title</label>
+                                    <input type="text" class="form-control" id="website-title" value="Jadhao Industries">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="contact-email" value="info@jadhaoindustries.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Phone</label>
+                                    <input type="tel" class="form-control" id="contact-phone" value="+91-721-252-1201">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="stats-card">
+                            <h5>System Info</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td>Version:</td>
+                                    <td>6.2.0</td>
+                                </tr>
+                                <tr>
+                                    <td>Database:</td>
+                                    <td><span id="db-status">Connected</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Last Backup:</td>
+                                    <td id="last-backup">Never</td>
+                                </tr>
+                            </table>
+                            <div class="mt-3">
+                                <button class="btn btn-success btn-sm me-2" onclick="adminPanel.backupData()">
+                                    <i class="fas fa-download me-1"></i>Backup Data
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="adminPanel.resetSystem()">
+                                    <i class="fas fa-sync me-1"></i>Reset System
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/page-builder.js"></script>
+</body>
+</html>
+e-1"></i>Reset System
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/page-builder.js"></script>
+</body>
+</html>
