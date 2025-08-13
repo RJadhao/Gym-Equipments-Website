@@ -64,6 +64,5 @@ Violation of these terms may lead to:
 
 ## Contact for Permissions
 For licensing, usage permissions, or partnership inquiries:  
-📧 **contact@jadhaoindustries.com**  
-📞 **[Your Phone Here]**  
-🏢 Jadhao Industries, Amravati, Maharashtra, India.
+📧 **coding.rnj@gmail.com**    
+🏢 Jadhao Industries, India.
